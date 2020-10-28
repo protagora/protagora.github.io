@@ -1,0 +1,102 @@
+*, html {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+body {
+    margin: 0;
+    padding: 0;
+}
+.playground {
+    float: left;
+}
+.settings {
+    float: left;
+}
+.speed div,
+.density div,
+.screen-size div,
+.volume div {
+    color: #115511;
+    float: left;
+    font-family: serif;
+    font-size: 35px;
+    line-height: 35px;
+    margin: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
+    border: 1px solid #99aa99;
+    background-color: #ffffff;
+}
+.game span,
+.player span {
+    color: #696969;
+    display: inline-block;
+    font-size: 15px;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    margin: 5px;
+}
+.player .players span {
+    display: inline-block;
+    margin: 10px;
+}
+#add-player {
+    cursor: pointer;
+}
+.speed div:hover {
+    color: #339933;
+    background: #eeffee;
+}
+#increase-speed, #increase-density, #increase-size, #increase-volume {
+    vertical-align: middle;
+    padding: 10px 10px 0 10px;
+}
+#decrease-speed, #decrease-density, #decrease-size, #decrease-volume {
+    transform: rotate(180deg);
+    vertical-align: middle;
+    padding: 10px 10px 0 10px;
+}
+/* SCREEN */
+div.red {
+    background-color: #ff0000;
+    display: inline-block;
+    border: 1px solid #ff0000;
+}
+div.green {
+    background-color: #00ff00;
+    display: inline-block;
+    border: 1px solid #00ff00;
+}
+div.blue {
+    background-color: #0000ff;
+    display: inline-block;
+    border: 1px solid #0000ff;
+}
+div.white {
+    background-color: #ffffff;
+    display: inline-block;
+    border: 1px solid #ffffff;
+}
+div.black {
+    background-color: #000000;
+    display: inline-block;
+    border: 1px solid #000000;
+}
+div.background {
+    background-color: #ddeedd;
+    display: inline-block;
+    border: 1px solid #ccc;
+}
+div.character {
+    background-color: #ff0000;
+    display: inline-block;
+    border: 1px solid #ccc;
+}
+div.active {
+    background-color: #999999;
+    display: inline-block;
+    border: 1px solid #ccc;
+}
+div.inactive {
+    background-color: #dadada;
+    display: inline-block;
+    border: 1px solid #ccc;
+}

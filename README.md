@@ -1,1 +1,0 @@
-# protagora.github.io
