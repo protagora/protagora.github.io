@@ -29,6 +29,9 @@
     div, p, span {
         display: inline-block;
     }
+    .break {
+        display: block;
+    }
     .code {
         color: #307999;
         font-size: 15px;
@@ -36,16 +39,34 @@
     .margin {
         margin: 25px;
     }
+    @media only screen and (min-width: 1025px) {
+        /* large */
+        .jambo {
+            width: 25%;
+        }
+        .large {
+            width: 33.33%;
+        }
+    }
+    @media only screen and (max-width: 1024px) {
+        /* medium */
+        .large {
+            width: 50%;
+        }
+    }
+    @media only screen and (max-width: 920px) {
+        /* small */
+    }
 </style>
 </head>
 <body>
     <div class="margin">
         <h1>DOM / js / css</h1>
-        <div>
-            <a href="https://protagora.github.io/zmijana/index.html" target="_blank">Zmijana - Blockade</a>
+        <div class="block">
+            <a href="https://protagora.github.io/zmijana/index.html" target="_blank">Zmijana - Blockade / Snake</a>
             [ <a class="code" href="https://github.com/protagora/zmijana/" target="_blank">source</a> ]
         </div>
-        <div>
+        <div class="block">
             <a href="https://protagora.github.io/stackattack/index.html" target="_blank">Stack Attack - Siemens C45</a>
             [ <a class="code" href="https://github.com/protagora/stackattack/" target="_blank">source</a> ]
         </div>
