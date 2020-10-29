@@ -1,0 +1,497 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Zmijana :D</title>
+    <script>
+      var field = {
+        'resolution': 24,
+        'width': 600,
+        'height': 600
+      }
+      var debug = (function () {
+        // var container = document.getElementById("")
+      })();
+
+      var controls = (function () {
+        var snake;
+        var score;
+        var init = function (s) {
+          snake = s;
+          score = snake.body().length;
+
+          document.getElementById("pause").addEventListener("click", function(event) {
+            if (engine.running() == true) {
+              engine.pause();
+            }
+          });
+          document.getElementById("resume").addEventListener("click", function(event) {
+            if (engine.running() == false) {
+              engine.resume();
+            }
+          });
+          document.getElementById("faster").addEventListener("click", function(event) {
+            if (engine.running() == true) {
+              engine.faster();
+            }
+          });
+          document.getElementById("slower").addEventListener("click", function(event) {
+            if (engine.running() == true) {
+              engine.slower();
+            }
+          });
+          document.getElementById("restart").addEventListener("click", function(event) {
+            if (engine.running() == true) {
+              snake.init(24, 24, 5, 5, 1, 0);
+              snake.turn(39);
+            }
+          });
+        }
+
+        var updateScore = function() {
+          score = snake.body().length;
+          return "▢ " + score;
+        }
+        
+        return {
+          init: init,
+          updateScore: updateScore
+        }
+      })();
+      
+      var engine = (function () {
+        var snake = null;
+        var field = null;
+        var interval = null;
+        var controls = null;
+        var periods = [1, 5, 10, 15, 20, 30, 40, 50, 100, 200];
+        var period = periods[periods.length - 1];
+        var displaySpeed = periods.length - periods.indexOf(period);
+        var state = null; // running, stopped, paused
+        var STATE_RUNNING = 'running';
+        var STATE_PAUSED = 'paused';
+        var STATE_STOPPED = 'stopped';
+        var MAXIMUM_INTERVAL = periods[periods.length - 1];
+        var MINIMUM_INTERVAL = periods[0];
+
+        var speedIndicatorUpdate = function() {
+          // This needs to move outside of engine as it is par of controls & HUD logic;
+          // For this to happend, pubsub mechanisam has to be added for event communication.
+          document.getElementById("speed").innerHTML = "🚄 " + speed();
+        }
+
+        var increasePeriod = function() {
+          if (periods.indexOf(period) == -1) {
+            period = periods[periods.length - 1];
+          }
+          var index = periods.indexOf(period);
+          if (index < (periods.length - 1)) {
+            index += 1;
+          }
+          period = periods[index];
+          displaySpeed = periods.length - index;
+        }
+
+        var decreasePeriod = function() {
+          if (periods.indexOf(period) == -1) {
+            period = periods[periods.length - 1];
+          }
+          var index = periods.indexOf(period);
+          if (index > 0) {
+            index -= 1;
+          }
+          period = periods[index];
+          displaySpeed = periods.length - index;
+        }
+
+        var slower = function() {
+          if (period > MAXIMUM_INTERVAL) {
+            return;
+          }
+          increasePeriod();
+          update();
+          speedIndicatorUpdate();
+        }
+
+        var faster = function() {
+          if (period < MINIMUM_INTERVAL) {
+            return;
+          }
+          decreasePeriod();
+          update();
+          speedIndicatorUpdate();
+        }
+
+        var speed = function() {
+          return displaySpeed;
+        }
+
+        var running = function() {
+          return (STATE_RUNNING == state);
+        }
+
+        var pause = function() {
+          clearInterval(interval);
+          state = STATE_PAUSED;
+        }
+
+        var resume = function() {
+          interval = setInterval(function () {
+            tick();
+          }, period);
+          state = STATE_RUNNING;
+        }
+
+        var handler = function (event) {
+          event.preventDefault();
+          // Snake multiplayer
+          // passEventToTargets(event);
+          snake.turn(event.keyCode);
+        };
+
+        // Snake multiplayer
+        var passEventToTargets = function(event) {
+          for (var snake in snakes) {
+            snake.turn(event.keyCode);
+          }
+        }
+
+        var bindKeyboard = function () {
+          document.addEventListener("keydown", handler, false);
+        }
+        var unbindKeyboard = function () {
+          document.removeEventListener("keydown", handler);
+        }
+        var init = function (s, f, p, c) {
+          snake = s;
+          // snakes = s;
+          field = f;
+          pray = p;
+          // this is now an array of controls
+          controls = c;
+          state = STATE_RUNNING;
+          // controls.init(snakes);
+          controls.init(snake);
+          speedIndicatorUpdate();
+        }
+        var draw = function () {
+          // drawing happens for each snake in snakes
+          var element;
+          try {
+            element = e;
+          } catch (error) {
+            element = 'field';
+          }
+          var container = document.getElementById(element);
+          container.innerHTML = "";
+          // for (var snake in snakes) {
+          //    Do below for each snake
+          // }
+          var current_snake = snake.body();
+          for (var i = 0; i < current_snake.length; i++) {
+            var color = "green";
+            if (!(i)) {
+              color = "red";
+            }
+            container.appendChild(create(current_snake[i], color));
+          }
+          document.getElementById("result").innerHTML = controls.updateScore();
+          container.appendChild(create(pray.getCurrent(), 'red'))
+        }
+        var create = function (point, color="green") {
+          var element = document.createElement("div");
+          element.class = "segment";
+          element.style.width = field.resolution + "px";
+          element.style.height = field.resolution + "px";
+          element.style.position = "absolute";
+          element.style.backgroundColor = color;
+          element.style.border = "1px solid #f0f0f0";
+          element.style.left = point.x * field.resolution + "px";
+          element.style.top = point.y * field.resolution + "px";
+          return element;
+        }
+        var tick = function () {
+          var current = pray.getCurrent();
+          var body = snake.body();
+          snake.update();
+          if (body[0].x == current.x &&
+              body[0].y == current.y) {
+            snake.prepend();
+            controls.updateScore();
+            pray.plant();
+          }
+          draw();
+        }
+        var update = function() {
+          clearInterval(interval);
+          interval = setInterval(function () {
+            tick();
+          }, period);
+        }
+        var run = function () {
+          bindKeyboard();
+          interval = setInterval(function () {
+            tick();
+          }, period);
+        }
+        var stop = function () {
+          clearInterval(interval);
+          unbindKeyboard();
+        }
+        return {
+          init: init,
+          run: run,
+          faster: faster,
+          slower: slower,
+          spped: speed,
+          stop: stop,
+          pause: pause,
+          resume: resume,
+          running: running,
+          display: speedIndicatorUpdate
+        }
+      })();
+      
+      var pray = (function () {
+        var current = null;
+        var generate = function () {
+          current = { 'x': Math.round(Math.random() * (field.resolution - 1)),
+                      'y': Math.round(Math.random() * (field.resolution - 1))};
+          console.log(current);
+        }
+        var plant = function () {
+          generate();
+          return current;
+        }
+        var getCurrent = function () {
+          if (!current) {
+            generate();
+          }
+          return current;
+        }
+        return {
+          plant: plant,
+          getCurrent: getCurrent
+        }
+      })();
+      
+      var snake = (function () {
+        var body;
+        var width;
+        var height;
+        var dx = null;
+        var dy = null;
+        var getBody = function () {
+          return body;
+        }
+        var init = function (w, h, x, y, dx, dy) {
+          width = w;
+          height = h;
+          body = new Array();
+          var x = Math.round(Math.random() * width);
+          var y = Math.round(Math.random() * height);
+          body.push(tile(x, y));
+          body.push(tile(body[0].x - dx, body[0].y - dy))
+          body.push(tile(body[1].x - dx, body[1].y - dy))
+          // print();
+        }
+        var tile = function (x, y) {
+          x = (width + x) % width;
+          y = (width + y) % height;
+          return {'x': x, 'y': y}
+        }
+        var prepend = function () {
+          body.unshift(tile(body[0].x + dx, body[0].y + dy));
+        }
+        var update = function() {
+          var capture = body.splice(-1);
+          // console.log('removed', capture);
+          prepend();
+          // detect collision
+          for (var i = 1; i < body.length; i++) {
+            if (body[0].x == body[i].x && body[0].y == body[i].y) {
+              init(width, height, body[0].x, body[0].y, dx, dy);
+            }
+          }
+        }
+        var turn = function (code) {
+          console.log(code);
+          switch (code) {
+            case 32: {
+              if (engine.running() == true) {
+                engine.pause();
+              } else {
+                engine.resume();
+              }
+            } break;
+            case 37: {
+              if (1 === dx) {
+                return;
+              }
+              dx = -1;
+              dy = 0;
+            } break;
+            case 38: {
+              if (1 === dy) {
+                return;
+              }
+              dx = 0;
+              dy = -1;
+            } break;
+            case 39: {
+              if (-1 === dx) {
+                return;
+              }
+              dx = 1;
+              dy = 0;
+            } break;
+            case 40: {
+              if (-1 === dy) {
+                return;
+              }
+              dx = 0;
+              dy = 1;
+            }
+          }
+        }
+        var print = function () {
+          console.log(dx, dy, body);
+        }
+        return {
+          update: update,
+          turn: turn,
+          init: init,
+          body: getBody,
+          prepend: prepend,
+          debug: print
+        }
+      })();
+      
+      window.addEventListener('DOMContentLoaded', function() {
+        console.log(document.getElementById("pause"));
+
+        snake.init(24, 24, 5, 5, 1, 0);
+        snake.turn(39);
+        
+        console.log('initializing engine');
+
+        engine.init(snake, field, pray, controls);
+        engine.run()
+      });
+      
+    </script>
+    <style>
+    *, html {
+
+    }
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    .playground {
+      margin: 25px 0 0 25px;
+      width: 600px;
+      height: 640px;
+      background-color: #cccccc;
+      position: relative;
+    }
+    .field {
+      display: inline-block;
+      margin: 1px;
+      width: 598px;
+      height: 598px;
+      background-color: #f0f0f0;
+      position: relative;
+    }
+    .score {
+      /* display: inline-block; */
+      float: right;
+      margin: 10px 15px 0;
+      color: #ff7700;
+    }
+    .result {
+      display: inline-block;
+      float: right;
+      margin: 10px 15px 0;
+      width: 50px;
+      text-align: right;
+      color: #15ac99;
+    }
+    .controls {
+
+    }
+    .start {
+
+    }
+    .pause {}
+    .restart {}
+    .speedup {}
+    .slowdown {}
+    .active-control {
+      display: inline-block;
+      margin: 5px 15px 0;
+      cursor: pointer;
+      color: #000000;
+      padding: 5px;
+    }
+    .debug {
+      background-color: #151515;
+      color: #f1f1f1;
+      width: 100%;
+      height: 100%;
+      opacity: 0.5;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .active-control:hover {
+      display: inline-block;
+      margin: 5px 15px 0;
+      cursor: pointer;
+      color: #000000;
+      background-color: #ffffff;
+      padding: 5px;
+    }
+    .inactive-control {
+      display: inline-block;
+      margin: 5px 15px 0;
+      cursor: pointer;
+      color: #999999;
+      padding: 5px;
+    }
+    .inactive-control:hover {
+      display: inline-block;
+      margin: 5px 15px 0;
+      cursor: pointer;
+      color: #999999;
+      background-color: #f9f9f9;
+      padding: 5px;
+    }
+    .inactive-control:hover::selection {
+      background: 
+    }
+    </style>
+  </head>
+  <body>
+    <div class="playground">
+      <div id="field" class="field">
+      </div>
+      <div class="controls">
+        <!-- <div id="start" class="start inactive-control">Start</div> -->
+        <div id="pause" class="pause inactive-control">Stoj</div>
+        <div id="resume" class="resume inactive-control">Igraj</div>
+        <div id="restart" class="restart inactive-control">Ponovo</div>
+        <div id="faster" class="speedup inactive-control">Brže</div>
+        <div id="slower" class="slowdown inactive-control">Sporije</div>
+        <div id="speed" class="speed inactive-control">🚄 -- </div>
+        <div id="result" class="result">▢ 0</div>
+        <!--<div class="score">
+          Blocks:
+        </div>-->
+	<!-- multiplayer - dve zmijane, muska i zenska -->
+	<!-- napravi kontrolu brzine, pauzu i ostalo -->
+	<!-- napravi hranu koja vredi vise od 1 (jabuka, ptica, krompir, super-hrana) -->
+      </div>
+      <!-- <div id="debug" class="debug"></div> -->
+    </div>
+  </body>
+</html>
