@@ -1,32 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Question & Answer Application</title>
-<link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Question & Answer Application</title>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
 <div class="container">
+    <div class="header">
+        <button class="settings-button" id="settingsButton">Settings</button>
+    </div>
+
     <h1>Question & Answer Application</h1>
-    <div class="radio-options">
+
+    <!-- First row: Mode -->
+    <div class="radio-row">
         <div class="radio-group">
             <strong>Mode:</strong><br>
-            <label><input type="radio" name="appMode" value="learning" checked> Learning</label><br>
+            <label><input type="radio" name="appMode" value="learning" checked> Learning</label>
             <label><input type="radio" name="appMode" value="interview"> Interview</label>
         </div>
     </div>
 
-    <div class="radio-options">
+    <!-- Second row: Question order and Random Type -->
+    <div class="radio-row">
         <div class="radio-group">
             <strong>Question Order:</strong><br>
-            <label><input type="radio" name="mode" value="sequence" checked> In Sequence</label><br>
+            <label><input type="radio" name="mode" value="sequence" checked> In Sequence</label>
             <label><input type="radio" name="mode" value="random"> Random</label>
         </div>
-        <div class="radio-group" id="randomModeGroup" style="display:none;">
+        <div class="radio-group" id="randomModeGroup">
             <strong>Random Type:</strong><br>
-            <label><input type="radio" name="randomMode" value="with" checked> With repetition</label><br>
+            <label><input type="radio" name="randomMode" value="with" checked> With repetition</label>
             <label><input type="radio" name="randomMode" value="without"> Without repetition</label>
         </div>
     </div>
@@ -34,13 +41,13 @@
     <div class="question">
         <p id="questionText"></p>
     </div>
-    
+
     <div class="answers" id="answersContainer"></div>
     <div class="multiple-choice" id="multipleChoiceContainer" style="display:none;"></div>
-
+    
     <div class="buttons">
-        <button id="showAnswerBtn" style="display:none;">Show Answer</button>
-        <button id="nextQuestionBtn" style="display:none;">Next Question</button>
+        <button id="showAnswerBtn">Show Answer</button>
+        <button id="nextQuestionBtn">Next Question</button>
         <button id="submitAnswerBtn" style="display:none;">Submit Answer</button>
         <button id="startOverBtn" style="display:none;">Start Again</button>
     </div>
@@ -48,21 +55,35 @@
     <div class="score" id="scoreContainer" style="display:none;"></div>
 </div>
 
-<!-- <script src="questionsData.js"></script> -->
+<!-- Settings Overlay -->
+<div class="settings-overlay" id="settingsOverlay" style="display:none;">
+    <div class="theme-switcher" id="themeSwitcher">
+        <!-- Close X button at top right -->
+        <button class="close-x-btn" id="closeXBtn">X</button>
+        <h2>Theme Settings</h2>
+        <button class="theme-switch-btn" id="autoThemeBtn">Auto</button>
+        <button class="theme-switch-btn" id="lightThemeBtn">Light</button>
+        <button class="theme-switch-btn" id="darkThemeBtn">Dark</button>
+        <br><br>
+        <button class="close-settings-btn" id="closeSettingsBtn">Close</button>
+    </div>
+</div>
+
+<!-- Include your data files for the questions -->
 <script src="questionsData_alternate_part1.js"></script>
 <script src="questionsData_alternate_part2.js"></script>
 <script src="questionsData_alternate_part3.js"></script>
 <script src="questionsData_alternate_part4.js"></script>
 <script src="questionsData_alternate_part5.js"></script>
 <script>
-  // Combine all parts into one questions array
-  const questions = [
-    ...questionsAlternatePart1,
-    ...questionsAlternatePart2,
-    ...questionsAlternatePart3,
-    ...questionsAlternatePart4,
-    ...questionsAlternatePart5
-  ];
+    // Combine data from all parts into one questions array
+    var questions = [
+        ...questionsAlternatePart1,
+        ...questionsAlternatePart2,
+        ...questionsAlternatePart3,
+        ...questionsAlternatePart4,
+        ...questionsAlternatePart5
+    ];
 </script>
 <script src="main.js"></script>
 

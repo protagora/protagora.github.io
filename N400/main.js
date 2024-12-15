@@ -11,46 +11,83 @@ const randomModeGroup = document.getElementById('randomModeGroup');
 const randomModeRadios = document.getElementsByName('randomMode');
 const appModeRadios = document.getElementsByName('appMode');
 const scoreContainer = document.getElementById('scoreContainer');
+const settingsButton = document.getElementById('settingsButton');
+const settingsOverlay = document.getElementById('settingsOverlay');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const closeXBtn = document.getElementById('closeXBtn');
+
+// Theme switcher buttons
+const autoThemeBtn = document.getElementById('autoThemeBtn');
+const lightThemeBtn = document.getElementById('lightThemeBtn');
+const darkThemeBtn = document.getElementById('darkThemeBtn');
 
 // Variables for application state
 let currentQuestionIndex = 0;
-let shownQuestions = []; // for "without repetition" mode in learning
-let interviewQuestions = []; // store the 10 randomly chosen questions for interview mode
+let shownQuestions = []; 
+let interviewQuestions = []; 
 let interviewCurrentIndex = 0;
 let interviewScore = 0;
 let isInterviewMode = false;
 let isLearningMode = true;
 
-// Initialization
-handleAppModeChange();
-handleModeChange();
-displayQuestion(currentQuestionIndex);
+document.addEventListener('DOMContentLoaded', () => {
+    handleAppModeChange();
+    handleModeChange();
+    displayQuestion(currentQuestionIndex);
 
-// Event listeners
-showAnswerBtn.addEventListener('click', toggleAnswerVisibility);
-nextQuestionBtn.addEventListener('click', nextQuestion);
-submitAnswerBtn.addEventListener('click', submitInterviewAnswer);
-startOverBtn.addEventListener('click', startOver);
+    // Event listeners
+    showAnswerBtn.addEventListener('click', toggleAnswerVisibility);
+    nextQuestionBtn.addEventListener('click', nextQuestion);
+    submitAnswerBtn.addEventListener('click', submitInterviewAnswer);
+    startOverBtn.addEventListener('click', startOver);
 
-for (let radio of modeRadios) {
-    radio.addEventListener('change', handleModeChange);
+    for (let radio of modeRadios) {
+        radio.addEventListener('change', handleModeChange);
+    }
+    for (let radio of randomModeRadios) {
+        radio.addEventListener('change', handleRandomModeChange);
+    }
+    for (let radio of appModeRadios) {
+        radio.addEventListener('change', handleAppModeChange);
+    }
+
+    // Settings overlay toggle
+    settingsButton.addEventListener('click', () => {
+        showSettings(true);
+    });
+    closeSettingsBtn.addEventListener('click', () => {
+        showSettings(false);
+    });
+    closeXBtn.addEventListener('click', () => {
+        showSettings(false);
+    });
+
+    // Close settings on ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && settingsOverlay.style.display === 'flex') {
+            showSettings(false);
+        }
+    });
+
+    // Theme switching
+    autoThemeBtn.addEventListener('click', () => switchTheme('auto'));
+    lightThemeBtn.addEventListener('click', () => switchTheme('light'));
+    darkThemeBtn.addEventListener('click', () => switchTheme('dark'));
+
+    // Initialize theme
+    switchTheme('auto');
+});
+
+function showSettings(show) {
+    settingsOverlay.style.display = show ? 'flex' : 'none';
 }
-for (let radio of randomModeRadios) {
-    radio.addEventListener('change', handleRandomModeChange);
-}
-for (let radio of appModeRadios) {
-    radio.addEventListener('change', handleAppModeChange);
-}
 
-// Functions
-
+/* Mode Handling */
 function handleAppModeChange() {
-    // If interview mode selected, we switch behavior
     let selectedMode = getSelectedAppMode();
     if (selectedMode === 'interview') {
         isInterviewMode = true;
         isLearningMode = false;
-        // In interview mode, question order controls can be hidden or ignored
         hideLearningControls();
         initInterview();
     } else {
@@ -69,22 +106,21 @@ function getSelectedAppMode() {
 }
 
 function hideLearningControls() {
-    // In interview mode, hide the "show answer" and "next question" initially
-    showAnswerBtn.style.display = 'none';
-    nextQuestionBtn.style.display = 'none';
-    // Also hide random/sequence controls as they aren't relevant in interview mode
+    if (showAnswerBtn) showAnswerBtn.style.display = 'none';
+    if (nextQuestionBtn) nextQuestionBtn.style.display = 'none';
     for (let r of modeRadios) {
         r.disabled = true;
     }
     for (let r of randomModeRadios) {
         r.disabled = true;
     }
-    randomModeGroup.style.display = 'none';
+    if (randomModeGroup) {
+        randomModeGroup.classList.add('disabled');
+    }
+    disableRandomOptions(true);
 }
 
 function showLearningControls() {
-    // In learning mode
-    // show question order radios and show answer/next question buttons
     for (let r of modeRadios) {
         r.disabled = false;
     }
@@ -92,23 +128,23 @@ function showLearningControls() {
         r.disabled = false;
     }
     handleModeChange();
-    showAnswerBtn.style.display = 'inline-block';
-    nextQuestionBtn.style.display = 'inline-block';
-    submitAnswerBtn.style.display = 'none';
-    startOverBtn.style.display = 'none';
-    scoreContainer.style.display = 'none';
-    multipleChoiceContainer.style.display = 'none';
-    answersContainer.style.display = 'none';
+    if (showAnswerBtn) showAnswerBtn.style.display = 'inline-block';
+    if (nextQuestionBtn) nextQuestionBtn.style.display = 'inline-block';
+    if (submitAnswerBtn) submitAnswerBtn.style.display = 'none';
+    if (startOverBtn) startOverBtn.style.display = 'none';
+    if (scoreContainer) scoreContainer.style.display = 'none';
+    if (multipleChoiceContainer) multipleChoiceContainer.style.display = 'none';
+    if (answersContainer) answersContainer.style.display = 'none';
 }
 
+/* Interview Mode */
 function initInterview() {
-    // Pick 10 random distinct questions from the questions array
     interviewQuestions = getRandomQuestions(questions, 10);
     interviewCurrentIndex = 0;
     interviewScore = 0;
-    scoreContainer.style.display = 'none';
-    startOverBtn.style.display = 'none';
-    submitAnswerBtn.style.display = 'inline-block';
+    if (scoreContainer) scoreContainer.style.display = 'none';
+    if (startOverBtn) startOverBtn.style.display = 'none';
+    if (submitAnswerBtn) submitAnswerBtn.style.display = 'inline-block';
     displayInterviewQuestion();
 }
 
@@ -128,44 +164,39 @@ function getRandomQuestions(fullList, count) {
 }
 
 function displayInterviewQuestion() {
-    // Hide learning elements
-    showAnswerBtn.style.display = 'none';
-    nextQuestionBtn.style.display = 'none';
-    answersContainer.style.display = 'none';
-    
+    if (showAnswerBtn) showAnswerBtn.style.display = 'none';
+    if (nextQuestionBtn) nextQuestionBtn.style.display = 'none';
+    if (answersContainer) answersContainer.style.display = 'none';
+
     let qObj = interviewQuestions[interviewCurrentIndex];
-
     questionText.textContent = `Question ${interviewCurrentIndex+1} of 10: ${qObj.question}`;
-    multipleChoiceContainer.style.display = 'block';
-    multipleChoiceContainer.innerHTML = '';
+    if (multipleChoiceContainer) {
+        multipleChoiceContainer.style.display = 'block';
+        multipleChoiceContainer.innerHTML = '';
 
-    // In interview mode: 
-    // - Pick 1 correct answer from correctAnswers[0] (the first correct answer will be the "official" correct one)
-    // - Pick 3 random wrong answers from qObj.wrongAnswers
-    let correctAnswer = qObj.correctAnswers[0];
-    let wrongs = getRandomWrongs(qObj.wrongAnswers, 3);
-    let options = [correctAnswer, ...wrongs];
-    shuffleArray(options);
+        let correctAnswer = qObj.correctAnswers[0];
+        let wrongs = getRandomWrongs(qObj.wrongAnswers, 3);
+        let options = [correctAnswer, ...wrongs];
+        shuffleArray(options);
 
-    // Generate radio buttons for these 4 options
-    let ul = document.createElement('ul');
-    options.forEach(opt => {
-        let li = document.createElement('li');
-        let label = document.createElement('label');
-        let radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.name = 'interviewOption';
-        radio.value = opt;
-        label.appendChild(radio);
-        label.appendChild(document.createTextNode(opt));
-        li.appendChild(label);
-        ul.appendChild(li);
-    });
-    multipleChoiceContainer.appendChild(ul);
+        let ul = document.createElement('ul');
+        options.forEach(opt => {
+            let li = document.createElement('li');
+            let label = document.createElement('label');
+            let radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'interviewOption';
+            radio.value = opt;
+            label.appendChild(radio);
+            label.appendChild(document.createTextNode(opt));
+            li.appendChild(label);
+            ul.appendChild(li);
+        });
+        multipleChoiceContainer.appendChild(ul);
+    }
 }
 
 function getRandomWrongs(wrongAnswers, count) {
-    // Returns a random subset of 'count' unique wrong answers
     let shuffled = [...wrongAnswers];
     shuffleArray(shuffled);
     return shuffled.slice(0, count);
@@ -179,7 +210,6 @@ function shuffleArray(arr) {
 }
 
 function submitInterviewAnswer() {
-    // Check selected answer
     let selected = document.querySelector('input[name="interviewOption"]:checked');
     if (!selected) {
         alert('Please select an answer!');
@@ -188,7 +218,6 @@ function submitInterviewAnswer() {
 
     let chosenAnswer = selected.value;
     let qObj = interviewQuestions[interviewCurrentIndex];
-    // The official correct answer is qObj.correctAnswers[0]
     let officialCorrect = qObj.correctAnswers[0];
 
     if (chosenAnswer === officialCorrect) {
@@ -197,36 +226,32 @@ function submitInterviewAnswer() {
 
     interviewCurrentIndex++;
 
-    // Check if we reached 6 correct answers (passing threshold)
     if (interviewScore >= 6) {
         endInterview(true);
         return;
     }
 
-    // Check if we reached 10 questions
     if (interviewCurrentIndex === 10) {
-        // End interview - check score
         let passed = interviewScore >= 6;
         endInterview(passed);
         return;
     }
 
-    // Otherwise, show next question
     displayInterviewQuestion();
 }
 
 function endInterview(passed) {
-    multipleChoiceContainer.style.display = 'none';
-    submitAnswerBtn.style.display = 'none';
-    startOverBtn.style.display = 'inline-block';
-
-    scoreContainer.style.display = 'block';
-    if (passed) {
-        scoreContainer.textContent = `Congratulations! You passed with a score of ${interviewScore}/10.`;
-    } else {
-        scoreContainer.textContent = `You scored ${interviewScore}/10. Unfortunately, that's not enough to pass (need at least 6).`;
+    if (multipleChoiceContainer) multipleChoiceContainer.style.display = 'none';
+    if (submitAnswerBtn) submitAnswerBtn.style.display = 'none';
+    if (startOverBtn) startOverBtn.style.display = 'inline-block';
+    if (scoreContainer) {
+        scoreContainer.style.display = 'block';
+        if (passed) {
+            scoreContainer.textContent = `Congratulations! You passed with a score of ${interviewScore}/10.`;
+        } else {
+            scoreContainer.textContent = `You scored ${interviewScore}/10. Unfortunately, that's not enough to pass (need at least 6).`;
+        }
     }
-
     questionText.textContent = 'Interview Finished';
 }
 
@@ -235,7 +260,6 @@ function startOver() {
     if (selectedMode === 'interview') {
         initInterview();
     } else {
-        // Return to learning mode original state
         isInterviewMode = false;
         isLearningMode = true;
         showLearningControls();
@@ -243,12 +267,20 @@ function startOver() {
     }
 }
 
+/* Mode and Randomization Handling */
 function handleModeChange() {
     const selectedMode = getSelectedMode();
     if (selectedMode === 'random') {
-        randomModeGroup.style.display = 'inline-block';
+        if (randomModeGroup) {
+            randomModeGroup.classList.remove('disabled');
+            disableRandomOptions(false);
+        }
     } else {
-        randomModeGroup.style.display = 'none';
+        // Sequence selected, disable random mode group
+        if (randomModeGroup) {
+            randomModeGroup.classList.add('disabled');
+            disableRandomOptions(true);
+        }
     }
     if (isLearningMode) {
         resetQuestionCycle();
@@ -258,6 +290,12 @@ function handleModeChange() {
 function handleRandomModeChange() {
     if (isLearningMode) {
         resetQuestionCycle();
+    }
+}
+
+function disableRandomOptions(disabled) {
+    for (let r of randomModeRadios) {
+        r.disabled = disabled;
     }
 }
 
@@ -280,44 +318,48 @@ function resetQuestionCycle() {
     shownQuestions = [];
     displayQuestion(currentQuestionIndex);
     hideAnswer();
-    showAnswerBtn.style.display = 'inline-block';
-    showAnswerBtn.textContent = 'Show Answer';
-    nextQuestionBtn.style.display = 'inline-block';
-    answersContainer.style.display = 'none';
-    multipleChoiceContainer.style.display = 'none';
-    submitAnswerBtn.style.display = 'none';
-    startOverBtn.style.display = 'none';
-    scoreContainer.style.display = 'none';
+
+    if (multipleChoiceContainer) multipleChoiceContainer.style.display = 'none';
+    if (showAnswerBtn) {
+        showAnswerBtn.style.display = 'inline-block';
+        showAnswerBtn.textContent = 'Show Answer';
+    }
+    if (nextQuestionBtn) nextQuestionBtn.style.display = 'inline-block';
+    if (answersContainer) answersContainer.style.display = 'none';
+    if (submitAnswerBtn) submitAnswerBtn.style.display = 'none';
+    if (startOverBtn) startOverBtn.style.display = 'none';
+    if (scoreContainer) scoreContainer.style.display = 'none';
 }
 
 function displayQuestion(index) {
     let q = questions[index];
     questionText.textContent = q.question;
-    // Prepare answers container but keep hidden until "Show Answer" is pressed
-    answersContainer.innerHTML = '';
-    let ul = document.createElement('ul');
-    q.correctAnswers.forEach(a => {
-        let li = document.createElement('li');
-        li.textContent = a;
-        ul.appendChild(li);
-    });
-    answersContainer.appendChild(ul);
-    answersContainer.style.display = 'none';
+    if (answersContainer) {
+        answersContainer.innerHTML = '';
+        let ul = document.createElement('ul');
+        q.correctAnswers.forEach(a => {
+            let li = document.createElement('li');
+            li.textContent = a;
+            ul.appendChild(li);
+        });
+        answersContainer.appendChild(ul);
+        answersContainer.style.display = 'none';
+    }
 }
 
 function toggleAnswerVisibility() {
-    if (answersContainer.style.display === 'none') {
+    if (answersContainer && answersContainer.style.display === 'none') {
         answersContainer.style.display = 'block';
         showAnswerBtn.textContent = 'Hide Answer';
-    } else {
+    } else if (answersContainer) {
         answersContainer.style.display = 'none';
         showAnswerBtn.textContent = 'Show Answer';
     }
 }
 
 function hideAnswer() {
-    answersContainer.style.display = 'none';
-    showAnswerBtn.textContent = 'Show Answer';
+    if (answersContainer) answersContainer.style.display = 'none';
+    if (showAnswerBtn) showAnswerBtn.textContent = 'Show Answer';
 }
 
 function nextQuestion() {
@@ -325,7 +367,6 @@ function nextQuestion() {
     if (mode === 'sequence') {
         currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
     } else {
-        // Random
         currentQuestionIndex = getNextQuestionIndex();
     }
     displayQuestion(currentQuestionIndex);
@@ -335,10 +376,8 @@ function nextQuestion() {
 function getNextQuestionIndex() {
     const randomMode = getSelectedRandomMode();
     if (randomMode === 'with') {
-        // Just return any random question index
         return Math.floor(Math.random() * questions.length);
     } else {
-        // Without repetition
         if (shownQuestions.length === questions.length) {
             shownQuestions = [];
         }
@@ -347,4 +386,33 @@ function getNextQuestionIndex() {
         shownQuestions.push(chosen);
         return chosen;
     }
+}
+
+/* Theme Switching */
+function switchTheme(mode) {
+    const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+    let theme;
+    if (mode === 'auto') {
+        theme = prefersDarkScheme.matches ? 'dark' : 'light';
+    } else {
+        theme = mode;
+    }
+
+    applyTheme(theme);
+    updateButtonStyles(mode);
+}
+
+function applyTheme(theme) {
+    document.body.className = theme === 'dark' ? 'dark-mode' : '';
+}
+
+function updateButtonStyles(activeMode) {
+    [autoThemeBtn, lightThemeBtn, darkThemeBtn].forEach(btn => {
+        if (btn.id === `${activeMode}ThemeBtn`) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
 }
